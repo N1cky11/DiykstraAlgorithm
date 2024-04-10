@@ -1,29 +1,30 @@
-#include <vector>
-#include <queue>
-#include <exception>
-#include <algorithm>
-#include <limits>
-#include <fstream>
-#include <iostream>
-#include <sstream>
+#include "Dijkstra.h"
 
-class dijkstra {
-    std::vector<std::vector<int>> matrix;
+Dijkstra::Dijkstra(const std::string &fileName) {
+    std::ifstream file(fileName);
 
-public:
-    dijkstra(std::vector<std::vector<int>> &m) : matrix(std::move(m)) {};
-    dijkstra() = default;
-    ~dijkstra() = default;
-    dijkstra& operator=(dijkstra &obj) = default;
-    dijkstra(const dijkstra &obj) = default;
+    if (!file.is_open()) {
+        std::cerr << "Could not open file\n" ;
+        std::cout << "Matrix initialized to default state\n" ;
+    }
+    else {
+       std::string line{};
 
-    std::vector<int> shortestPath(int beginningNode = 0);
-    int indexOfMin(const std::vector<int> &vec,const std::vector<int> &visitedNodes) const;
-    std::priority_queue<std::pair<int,int>, std::vector<std::pair<int,int>>, std::greater<std::pair<int,int>>> adjacentElements(int beginningNode,std::vector<int> &visitedNodes) const ;
-    bool setDistance(int node, std::vector<int> &distance);
-};
+        while (getline(file, line)) {
+            std::vector<int> lineNumbers{};
+            std::istringstream is(line);
+            int number{};
+            while (is >> number) {
+                lineNumbers.push_back(number);
+            }
+            matrix.push_back(lineNumbers);
+        }
+        file.close();
 
-int dijkstra::indexOfMin(const std::vector<int> &vec,const std::vector<int> &visitedNodes) const {
+    }
+
+}
+int Dijkstra::indexOfMin(const std::vector<int> &vec,const std::vector<int> &visitedNodes) const {
     int minValue = std::numeric_limits<int>::max();
     int minIndex = -1 ;
     for (int i = 0; i != vec.size() ; ++i) {
@@ -35,7 +36,7 @@ int dijkstra::indexOfMin(const std::vector<int> &vec,const std::vector<int> &vis
     return minIndex;
 }
 
-std::priority_queue<std::pair<int,int>, std::vector<std::pair<int,int>>, std::greater<std::pair<int,int>>> dijkstra::adjacentElements(int beginningNode,std::vector<int> &visitedNodes) const {
+std::priority_queue<std::pair<int,int>, std::vector<std::pair<int,int>>, std::greater<std::pair<int,int>>> Dijkstra::adjacentElements(int beginningNode,std::vector<int> &visitedNodes) const {
     std::priority_queue<std::pair<int,int>, std::vector<std::pair<int,int>>, std::greater<std::pair<int,int>>> distance_node;
 
     for (size_t i = 0; i != matrix.size(); ++i) {
@@ -46,7 +47,7 @@ std::priority_queue<std::pair<int,int>, std::vector<std::pair<int,int>>, std::gr
     return distance_node;
 }
 
-bool dijkstra::setDistance(int node, std::vector<int> &distance) {
+bool Dijkstra::setDistance(int node, std::vector<int> &distance) {
     auto n = matrix.size();
     try {
         for (size_t i = 0; i != n; ++i) {
@@ -60,12 +61,12 @@ bool dijkstra::setDistance(int node, std::vector<int> &distance) {
     return true;
 }
 
-std::vector<int> dijkstra::shortestPath(int node) {
+std::vector<int> Dijkstra::findShortestPath(int node) {
     auto n=matrix.size() ;
     std::vector<int> distance(n, std::numeric_limits<int>::max() );
     std::vector<int> visitedNodes(n,0);
 
-    if (!setDistance(node, distance)) throw std::runtime_error("Invalid node input\n") ;
+    if (!setDistance(node, distance)) throw std::out_of_range("Invalid node input\n") ;
 
     while( std::find(visitedNodes.begin(),visitedNodes.end() , 0)!=visitedNodes.end() ) {
         int currentVertex=indexOfMin(distance,visitedNodes);
@@ -89,43 +90,4 @@ std::vector<int> dijkstra::shortestPath(int node) {
      }
 
     return distance;
-}
-
-void openAndRead(std::vector<std::vector<int> > &matrix) {
-   std::ifstream file("input.txt");
-
-    if (!file.is_open()) {
-        throw std::runtime_error("Can't open file\n") ;
-    }
-
-    std::string line{};
-
-    while (getline(file, line)) {
-        std::vector<int> lineNumbers{};
-        std::istringstream is(line);
-        int number{};
-        while (is >> number) {
-            lineNumbers.push_back(number);
-        }
-        matrix.push_back(lineNumbers);
-    }
-
-    file.close();
-
-}
-
-int main(int argc, char **argv) {
-    std::vector<std::vector<int> > matrix{} ;
-    std::vector<int> resVec{} ;
-
-    try {
-        openAndRead(matrix) ;
-        dijkstra res(matrix);
-        resVec=res.shortestPath(7) ;
-        for (const auto &i : resVec) std::cout << i << " ";
-    } catch(std::runtime_error &e) {
-     std::cout << "Error:" << e.what() <<"\n" ;
-    }
-
-    return 0;
 }
